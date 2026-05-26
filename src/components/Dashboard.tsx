@@ -335,58 +335,65 @@ const Dashboard = () => {
 
 
         {/* Product List */}
-        {!showAllProducts ? (
-          <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <AnimatePresence mode="popLayout">
-                {sortedFiltered.map((product, index) => (
-                  <ProductCard key={product.id} product={product} onDelete={handleDelete} onEdit={handleEdit} index={index} />
-                ))}
-              </AnimatePresence>
-            </div>
-
-            {products.length === 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-12 text-center">
-                <Package className="mx-auto mb-6 h-20 w-20 text-muted-foreground/20" />
-                <p className="text-xl font-bold text-muted-foreground">Estoque vazio</p>
-                <p className="text-sm text-muted-foreground/60 mt-2">Os produtos que você cadastrar aparecerão aqui.</p>
-
-              </motion.div>
-            )}
-
-            {products.length > 0 && sortedFiltered.length === 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-12 text-center">
-                <Search className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
-                <p className="text-muted-foreground">Nenhum produto encontrado para "{search}"</p>
-              </motion.div>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="mb-4 flex items-center gap-2">
+        <div className="space-y-6">
+          {showAllProducts && (
+            <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-bold text-foreground">Todos os Produtos</h2>
-              <span className="text-sm text-muted-foreground">({allProducts.length})</span>
+              <span className="text-sm text-muted-foreground">({filteredProducts.length})</span>
             </div>
-            {allProducts.length === 0 ? (
-              <div className="glass rounded-xl p-8 text-center">
-                <Eye className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
-                <p className="text-muted-foreground">Nenhum produto cadastrado ainda</p>
+          )}
+
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="mb-4 h-10 w-10 rounded-full border-4 border-primary border-t-transparent" />
+              <p className="text-muted-foreground animate-pulse">Carregando estoque...</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <AnimatePresence mode="popLayout">
+                  {filteredProducts.map((product, index) => (
+                    <div key={product.id} className="relative group">
+                      <ProductCard 
+                        product={product} 
+                        onDelete={handleDelete} 
+                        onEdit={handleEdit} 
+                        index={index}
+                        readOnly={!isAdmin && product.user_id !== user?.id}
+                      />
+                      {showAllProducts && (
+                        <span className="absolute top-3 right-3 rounded-full bg-background/80 backdrop-blur-sm border border-border px-2 py-0.5 text-[10px] font-bold text-muted-foreground shadow-sm">
+                          {product.username}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </AnimatePresence>
               </div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {allProducts.map((product, index) => (
-                  <div key={product.id} className="relative">
-                    <ProductCard product={product} onDelete={handleDelete} onEdit={handleEdit} index={index} />
-                    <span className="absolute top-2 right-2 rounded-full bg-muted/80 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      {product.username}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+
+              {filteredProducts.length === 0 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-12 text-center py-12 glass rounded-3xl">
+                  {search ? (
+                    <>
+                      <Search className="mx-auto mb-4 h-12 w-12 text-muted-foreground/20" />
+                      <p className="text-lg font-bold text-muted-foreground">Nenhum resultado</p>
+                      <p className="text-sm text-muted-foreground/60 mt-1">Tente buscar por outro termo.</p>
+                    </>
+                  ) : (
+                    <>
+                      <Package className="mx-auto mb-6 h-20 w-20 text-muted-foreground/20" />
+                      <p className="text-xl font-bold text-muted-foreground">Estoque vazio</p>
+                      <p className="text-sm text-muted-foreground/60 mt-2">
+                        {showAllProducts ? "Nenhum produto cadastrado no sistema." : "Os produtos que você cadastrar aparecerão aqui."}
+                      </p>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

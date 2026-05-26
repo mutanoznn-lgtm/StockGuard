@@ -34,7 +34,11 @@ const AddProductForm = ({ onAdd }: AddProductFormProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const exDate = maskedToIso(expDateText);
-    if (!name.trim() || !exDate) return;
+    if (!name.trim()) return;
+    if (!exDate) {
+      // Pequena validação extra
+      return;
+    }
     onAdd(name.trim(), getTodayIso(), exDate);
     setName("");
     setExpDateText("");
