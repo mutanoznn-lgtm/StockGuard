@@ -34,41 +34,66 @@ const toCard = (p: DbProduct): CardProduct => ({
 const Dashboard = () => {
   const { user, username, isAdmin, signOut } = useAuth();
   const { toast } = useToast();
-  const [products, setProducts] = useState<CardProduct[]>([]);
-  const [allProducts, setAllProducts] = useState<(CardProduct & { username: string })[]>([]);
+  const [products, setProducts] = useState<(CardProduct & { user_id: string; username?: string })[]>([]);
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const notifiedRef = useRef(false);
 
   const fetchProducts = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("products")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("expiration_date", { ascending: true });
-    setProducts((data ?? []).map(toCard));
-  }, [user]);
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          *,
+          profiles:user_id (
+            username
+          )
+        `)
+        .order("expiration_date", { ascending: true });
 
-  const fetchAllProducts = useCallback(async () => {
-    if (!user) return;
-    const { data: profiles } = await supabase.from("profiles").select("user_id, username");
-    const { data: prods } = await supabase.from("products").select("*").order("expiration_date", { ascending: true });
-    if (!profiles || !prods) return;
+      if (error) throw error;
 
-    const profileMap: Record<string, string> = {};
-    for (const p of profiles) profileMap[p.user_id] = p.username;
+      const formatted = (data ?? []).map((p: any) => ({
+        ...toCard(p),
+        user_id: p.user_id,
+        username: p.profiles?.username || "Desconhecido"
+      }));
 
-    setAllProducts(
-      prods.map((p: any) => ({ ...toCard(p), username: profileMap[p.user_id] ?? "Desconhecido" }))
-    );
-  }, [user]);
+      setProducts(formatted);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar produtos",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, toast]);
 
   useEffect(() => {
     fetchProducts();
-    fetchAllProducts();
-  }, [fetchProducts, fetchAllProducts]);
+
+    // Inscrição em tempo real
+    const channel = supabase
+      .channel("products_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "products" },
+        () => {
+          fetchProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchProducts]);
 
   // Notificações de produtos próximos do vencimento
   useEffect(() => {
@@ -91,53 +116,80 @@ const Dashboard = () => {
   const handleAdd = useCallback(
     async (name: string, manufactureDate: string, expirationDate: string) => {
       if (!user) return;
-      await supabase.from("products").insert({
-        user_id: user.id,
-        name,
-        manufacture_date: manufactureDate,
-        expiration_date: expirationDate,
-      });
-      fetchProducts();
-      fetchAllProducts();
+      try {
+        const { error } = await supabase.from("products").insert({
+          user_id: user.id,
+          name,
+          manufacture_date: manufactureDate,
+          expiration_date: expirationDate,
+        });
+        if (error) throw error;
+        toast({ title: "Produto adicionado com sucesso!" });
+      } catch (error: any) {
+        toast({
+          title: "Erro ao adicionar produto",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
-    [user, fetchProducts, fetchAllProducts]
+    [user, toast]
   );
 
   const handleDelete = useCallback(
     async (id: string) => {
-      await supabase.from("products").delete().eq("id", id);
-      fetchProducts();
-      fetchAllProducts();
+      try {
+        const { error } = await supabase.from("products").delete().eq("id", id);
+        if (error) throw error;
+        toast({ title: "Produto removido!" });
+      } catch (error: any) {
+        toast({
+          title: "Erro ao remover produto",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
-    [fetchProducts, fetchAllProducts]
+    [toast]
   );
 
   const handleEdit = useCallback(
     async (id: string, name: string, manufactureDate: string, expirationDate: string) => {
-      await supabase.from("products").update({
-        name,
-        manufacture_date: manufactureDate,
-        expiration_date: expirationDate,
-      }).eq("id", id);
-      fetchProducts();
-      fetchAllProducts();
+      try {
+        const { error } = await supabase.from("products").update({
+          name,
+          manufacture_date: manufactureDate,
+          expiration_date: expirationDate,
+        }).eq("id", id);
+        if (error) throw error;
+        toast({ title: "Produto atualizado!" });
+      } catch (error: any) {
+        toast({
+          title: "Erro ao atualizar produto",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
-    [fetchProducts, fetchAllProducts]
+    [toast]
   );
 
-  const sortedFiltered = useMemo(() => {
-    const filtered = products.filter((p) =>
-      p.name.toLowerCase().includes(search.toLowerCase())
-    );
-    return filtered.sort(
-      (a, b) => getDaysUntilExpiration(a.expirationDate) - getDaysUntilExpiration(b.expirationDate)
-    );
-  }, [products, search]);
+  const filteredProducts = useMemo(() => {
+    let list = products;
+    if (!showAllProducts) {
+      list = products.filter(p => p.user_id === user?.id);
+    }
+    
+    return list
+      .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+      .sort((a, b) => getDaysUntilExpiration(a.expirationDate) - getDaysUntilExpiration(b.expirationDate));
+  }, [products, search, showAllProducts, user?.id]);
 
   const handleCopy = useCallback(async () => {
-    const text = generateWhatsAppText(sortedFiltered);
+    const text = generateWhatsAppText(filteredProducts);
     try {
       await navigator.clipboard.writeText(text);
+      toast({ title: "Lista copiada!" });
     } catch {
       const textarea = document.createElement("textarea");
       textarea.value = text;
@@ -145,20 +197,22 @@ const Dashboard = () => {
       textarea.select();
       document.execCommand("copy");
       document.body.removeChild(textarea);
+      toast({ title: "Lista copiada!" });
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [sortedFiltered]);
+  }, [filteredProducts, toast]);
 
   const stats = useMemo(() => {
-    const total = products.length;
-    const expired = products.filter((p) => getDaysUntilExpiration(p.expirationDate) < 0).length;
-    const warning = products.filter((p) => {
+    const myProducts = products.filter(p => p.user_id === user?.id);
+    const total = myProducts.length;
+    const expired = myProducts.filter((p) => getDaysUntilExpiration(p.expirationDate) < 0).length;
+    const warning = myProducts.filter((p) => {
       const d = getDaysUntilExpiration(p.expirationDate);
       return d >= 0 && d <= 7;
     }).length;
     return { total, expired, warning };
-  }, [products]);
+  }, [products, user?.id]);
 
   return (
     <div className="min-h-screen pb-12">
@@ -281,58 +335,65 @@ const Dashboard = () => {
 
 
         {/* Product List */}
-        {!showAllProducts ? (
-          <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <AnimatePresence mode="popLayout">
-                {sortedFiltered.map((product, index) => (
-                  <ProductCard key={product.id} product={product} onDelete={handleDelete} onEdit={handleEdit} index={index} />
-                ))}
-              </AnimatePresence>
-            </div>
-
-            {products.length === 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-12 text-center">
-                <Package className="mx-auto mb-6 h-20 w-20 text-muted-foreground/20" />
-                <p className="text-xl font-bold text-muted-foreground">Estoque vazio</p>
-                <p className="text-sm text-muted-foreground/60 mt-2">Os produtos que você cadastrar aparecerão aqui.</p>
-
-              </motion.div>
-            )}
-
-            {products.length > 0 && sortedFiltered.length === 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-12 text-center">
-                <Search className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
-                <p className="text-muted-foreground">Nenhum produto encontrado para "{search}"</p>
-              </motion.div>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="mb-4 flex items-center gap-2">
+        <div className="space-y-6">
+          {showAllProducts && (
+            <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-bold text-foreground">Todos os Produtos</h2>
-              <span className="text-sm text-muted-foreground">({allProducts.length})</span>
+              <span className="text-sm text-muted-foreground">({filteredProducts.length})</span>
             </div>
-            {allProducts.length === 0 ? (
-              <div className="glass rounded-xl p-8 text-center">
-                <Eye className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
-                <p className="text-muted-foreground">Nenhum produto cadastrado ainda</p>
+          )}
+
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="mb-4 h-10 w-10 rounded-full border-4 border-primary border-t-transparent" />
+              <p className="text-muted-foreground animate-pulse">Carregando estoque...</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <AnimatePresence mode="popLayout">
+                  {filteredProducts.map((product, index) => (
+                    <div key={product.id} className="relative group">
+                      <ProductCard 
+                        product={product} 
+                        onDelete={handleDelete} 
+                        onEdit={handleEdit} 
+                        index={index}
+                        readOnly={!isAdmin && product.user_id !== user?.id}
+                      />
+                      {showAllProducts && (
+                        <span className="absolute top-3 right-3 rounded-full bg-background/80 backdrop-blur-sm border border-border px-2 py-0.5 text-[10px] font-bold text-muted-foreground shadow-sm">
+                          {product.username}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </AnimatePresence>
               </div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {allProducts.map((product, index) => (
-                  <div key={product.id} className="relative">
-                    <ProductCard product={product} onDelete={handleDelete} onEdit={handleEdit} index={index} />
-                    <span className="absolute top-2 right-2 rounded-full bg-muted/80 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      {product.username}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+
+              {filteredProducts.length === 0 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-12 text-center py-12 glass rounded-3xl">
+                  {search ? (
+                    <>
+                      <Search className="mx-auto mb-4 h-12 w-12 text-muted-foreground/20" />
+                      <p className="text-lg font-bold text-muted-foreground">Nenhum resultado</p>
+                      <p className="text-sm text-muted-foreground/60 mt-1">Tente buscar por outro termo.</p>
+                    </>
+                  ) : (
+                    <>
+                      <Package className="mx-auto mb-6 h-20 w-20 text-muted-foreground/20" />
+                      <p className="text-xl font-bold text-muted-foreground">Estoque vazio</p>
+                      <p className="text-sm text-muted-foreground/60 mt-2">
+                        {showAllProducts ? "Nenhum produto cadastrado no sistema." : "Os produtos que você cadastrar aparecerão aqui."}
+                      </p>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

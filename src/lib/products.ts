@@ -6,11 +6,14 @@ export interface Product {
 }
 
 export function getDaysUntilExpiration(expirationDate: string): number {
+  const [y, m, d] = expirationDate.split("-").map(Number);
+  const exp = new Date(y, m - 1, d);
+  
   const now = new Date();
   now.setHours(0, 0, 0, 0);
-  const exp = new Date(expirationDate);
-  exp.setHours(0, 0, 0, 0);
-  return Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  
+  const diffTime = exp.getTime() - now.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
 export function getStatusColor(days: number): "green" | "yellow" | "red" {

@@ -28,15 +28,20 @@ const LoginScreen = () => {
     }
 
     setLoading(true);
-    if (isSignUp) {
-      const { error } = await signUp(email.trim(), password, username.trim());
-      if (error) setError(error);
-      else setSuccess("Conta criada! Verifique seu e-mail para confirmar.");
-    } else {
-      const { error } = await signIn(email.trim(), password);
-      if (error) setError("E-mail ou senha incorretos");
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email.trim(), password, username.trim());
+        if (error) setError(error);
+        else setSuccess("Conta criada! Verifique seu e-mail para confirmar.");
+      } else {
+        const { error } = await signIn(email.trim(), password);
+        if (error) setError("E-mail ou senha incorretos");
+      }
+    } catch (err: any) {
+      setError("Ocorreu um erro inesperado. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -56,7 +61,6 @@ const LoginScreen = () => {
           >
             <Package className="h-10 w-10 text-primary" />
           </motion.div>
-
 
           <motion.h1
             initial={{ opacity: 0 }}
@@ -89,7 +93,6 @@ const LoginScreen = () => {
                     onChange={(e) => { setUsername(e.target.value); setError(""); }}
                     placeholder="Seu nome"
                     className="w-full rounded-2xl border border-border bg-muted/30 py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all"
-
                   />
                 </div>
               </motion.div>
@@ -105,7 +108,6 @@ const LoginScreen = () => {
                   onChange={(e) => { setEmail(e.target.value); setError(""); }}
                   placeholder="seu@email.com"
                   className="w-full rounded-2xl border border-border bg-muted/30 py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all"
-
                 />
               </div>
             </div>
@@ -120,21 +122,22 @@ const LoginScreen = () => {
                   onChange={(e) => { setPassword(e.target.value); setError(""); }}
                   placeholder="Sua senha"
                   className="w-full rounded-2xl border border-border bg-muted/30 py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all"
-
                 />
               </div>
             </div>
 
             {error && (
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-destructive">
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-destructive font-medium">
                 {error}
               </motion.p>
             )}
+            
             {success && (
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-semibold text-status-green">
-                {success}
-              </motion.p>
-
+              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="rounded-xl bg-status-green-bg p-4 border border-status-green/20">
+                <p className="text-sm font-bold text-status-green text-center">
+                  {success}
+                </p>
+              </motion.div>
             )}
 
             <motion.button

@@ -23,18 +23,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("username")
-      .eq("user_id", userId)
-      .maybeSingle();
-    setUsername(data?.username ?? null);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      setUsername(data?.username ?? "Usuário");
 
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    setIsAdmin(roleData?.some((r: any) => r.role === "admin") ?? false);
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      
+      if (roleError) throw roleError;
+      setIsAdmin(roleData?.some((r) => r.role === "admin") ?? false);
+    } catch (err) {
+      console.error("Erro ao buscar perfil:", err);
+    }
   }, []);
 
   useEffect(() => {
@@ -43,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchProfile(session.user.id), 0);
+          fetchProfile(session.user.id);
         } else {
           setUsername(null);
           setIsAdmin(false);
