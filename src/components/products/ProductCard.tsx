@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Trash2, Pencil, Clock, Check, X } from "lucide-react";
-import type { Product } from "@/lib/products";
+import type { Product } from "@/types/product";
 import { getDaysUntilExpiration, getStatusColor, getStatusLabel, formatDate } from "@/lib/products";
 
 function applyDateMask(value: string): string {

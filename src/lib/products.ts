@@ -1,9 +1,5 @@
-export interface Product {
-  id: string;
-  name: string;
-  manufactureDate: string;
-  expirationDate: string;
-}
+import { Product } from "@/types/product";
+
 
 export function getDaysUntilExpiration(expirationDate: string): number {
   const [y, m, d] = expirationDate.split("-").map(Number);
