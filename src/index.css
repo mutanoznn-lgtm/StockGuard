@@ -6,57 +6,44 @@
 
 @layer base {
   :root {
-    --background: 20 30% 6%;
-    --foreground: 30 30% 96%;
+    --background: 30 33% 97%;
+    --foreground: 20 5% 10%;
 
-    --card: 20 20% 11%;
-    --card-foreground: 30 30% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 5% 10%;
 
-    --popover: 20 20% 11%;
-    --popover-foreground: 30 30% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 5% 10%;
 
-    --primary: 25 95% 55%;
+    --primary: 25 80% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 35 100% 50%;
-    --secondary-foreground: 20 30% 6%;
+    --secondary: 35 90% 95%;
+    --secondary-foreground: 25 90% 30%;
 
-    --muted: 20 15% 16%;
-    --muted-foreground: 25 15% 55%;
+    --muted: 30 10% 92%;
+    --muted-foreground: 20 5% 45%;
 
-    --accent: 15 90% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 35 80% 90%;
+    --accent-foreground: 25 90% 20%;
 
-    --destructive: 0 85% 55%;
+    --destructive: 0 85% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 20 15% 18%;
-    --input: 20 15% 18%;
-    --ring: 25 95% 55%;
+    --border: 30 10% 85%;
+    --input: 30 10% 85%;
+    --ring: 25 80% 50%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Neon status colors */
-    --neon-green: 145 100% 50%;
-    --neon-yellow: 50 100% 55%;
-    --neon-red: 0 100% 55%;
-    --neon-green-glow: 145 100% 50% / 0.3;
-    --neon-yellow-glow: 50 100% 55% / 0.3;
-    --neon-red-glow: 0 100% 55% / 0.3;
+    /* Status colors */
+    --status-green: 150 60% 40%;
+    --status-yellow: 40 90% 50%;
+    --status-red: 0 80% 55%;
+    --status-green-bg: 150 60% 95%;
+    --status-yellow-bg: 40 90% 95%;
+    --status-red-bg: 0 80% 95%;
 
-    /* Glass */
-    --glass-bg: 20 20% 11% / 0.6;
-    --glass-border: 0 0% 100% / 0.08;
-    --glass-highlight: 0 0% 100% / 0.05;
-
-    --sidebar-background: 20 30% 6%;
-    --sidebar-foreground: 30 30% 96%;
-    --sidebar-primary: 25 95% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 20 15% 16%;
-    --sidebar-accent-foreground: 30 30% 96%;
-    --sidebar-border: 20 15% 18%;
-    --sidebar-ring: 25 95% 55%;
   }
 }
 
@@ -97,72 +84,40 @@
 }
 
 .aurora-bg {
-  background: linear-gradient(
-    -45deg,
-    hsl(25, 80%, 14%),
-    hsl(20, 30%, 6%),
-    hsl(35, 60%, 10%),
-    hsl(10, 50%, 10%),
-    hsl(20, 30%, 6%)
-  );
-  background-size: 400% 400%;
-  animation: aurora 20s ease infinite;
+  background: linear-gradient(135deg, hsl(30, 33%, 97%), hsl(25, 90%, 95%));
 }
 
-/* Glass morphism */
 .glass {
-  background: hsl(var(--glass-bg));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid hsl(var(--glass-border));
+  background: white;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
 }
 
-.glass-strong {
-  background: hsl(230 20% 12% / 0.8);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid hsl(var(--glass-border));
-}
-
-/* Neon card borders */
-.neon-green {
-  border-color: hsl(var(--neon-green));
-  box-shadow: inset 0 0 8px hsl(var(--neon-green-glow)), 0 0 4px hsl(var(--neon-green-glow));
-}
-
-.neon-yellow {
-  border-color: hsl(var(--neon-yellow));
-  box-shadow: inset 0 0 8px hsl(var(--neon-yellow-glow)), 0 0 4px hsl(var(--neon-yellow-glow));
-}
-
-.neon-red {
-  border-color: hsl(var(--neon-red));
-  box-shadow: inset 0 0 8px hsl(var(--neon-red-glow)), 0 0 4px hsl(var(--neon-red-glow));
-}
-
-/* Subtle hover lift instead of continuous float */
 .float-card {
-  transition: transform 0.2s ease;
+  transition: all 0.3s ease;
+  background: white;
+  border: 1px solid hsl(var(--border));
 }
 
 .float-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--background));
+  background: hsl(var(--muted));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted));
-  border-radius: 3px;
+  background: hsl(var(--border));
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary));
 }
+
