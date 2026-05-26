@@ -161,62 +161,72 @@ const Dashboard = () => {
   }, [products]);
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-5xl">
-        {/* Top Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 flex justify-center"
-        >
-          <img src={logoSantaRita} alt="Atacadão Santa Rita" className="h-20 sm:h-24 w-auto" />
-        </motion.div>
-
-        {/* Header */}
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="mb-6 flex flex-wrap items-center justify-between gap-4"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20">
-              <Package className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground sm:text-2xl">Controle de Validade</h1>
-              <p className="text-sm text-muted-foreground">
-                Olá, <span className="font-medium text-secondary">{username ?? "Usuário"}</span>
-                {isAdmin && <span className="ml-2 rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">Admin</span>}
-              </p>
-            </div>
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={signOut}
-            className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+    <div className="min-h-screen pb-12">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
+        {/* Header Section */}
+        <div className="pt-6 pb-8 space-y-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex justify-center"
           >
-            <LogOut className="h-4 w-4" />
-            Sair
-          </motion.button>
-        </motion.header>
+            <img src={logoSantaRita} alt="Atacadão Santa Rita" className="h-16 sm:h-20 w-auto object-contain" />
+          </motion.div>
 
-        {/* Stats */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-6 grid grid-cols-3 gap-3">
-          <div className="glass rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-            <p className="text-xs text-muted-foreground">Produtos</p>
-          </div>
-          <div className="glass rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-neon-yellow">{stats.warning}</p>
-            <p className="text-xs text-muted-foreground">Atenção</p>
-          </div>
-          <div className="glass rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-neon-red">{stats.expired}</p>
-            <p className="text-xs text-muted-foreground">Vencidos</p>
-          </div>
-        </motion.div>
+          <motion.header
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 glass rounded-2xl shadow-sm"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-inner">
+                <Package className="h-7 w-7 text-primary" />
+              </div>
+              <div className="text-center sm:text-left">
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Gestão de Estoque</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Bem-vindo, <span className="font-semibold text-primary">{username ?? "Usuário"}</span>
+                  {isAdmin && <span className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">Admin</span>}
+                </p>
+              </div>
+            </div>
+            
+            <motion.button
+              whileHover={{ scale: 1.02, backgroundColor: "hsl(var(--destructive) / 0.1)" }}
+              whileTap={{ scale: 0.98 }}
+              onClick={signOut}
+              className="group flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:border-destructive hover:text-destructive"
+            >
+              <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              Sair da conta
+            </motion.button>
+          </motion.header>
+
+          {/* Stats Grid */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.1 }} 
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+          >
+            {[
+              { label: "Total de Itens", value: stats.total, color: "text-foreground", icon: Package },
+              { label: "Vencendo Logo", value: stats.warning, color: "text-status-yellow", icon: CheckCircle },
+              { label: "Já Vencidos", value: stats.expired, color: "text-status-red", icon: Eye }
+            ].map((stat, i) => (
+              <div key={i} className="glass rounded-2xl p-5 flex items-center gap-4 transition-transform hover:scale-[1.02]">
+                <div className={`p-3 rounded-xl bg-muted/50 ${stat.color}`}>
+                   <stat.icon className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className={`text-2xl font-black ${stat.color}`}>{stat.value}</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">{stat.label}</p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
 
         {/* Add Product */}
         <div className="mb-6">

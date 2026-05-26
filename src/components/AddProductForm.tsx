@@ -48,12 +48,13 @@ const AddProductForm = ({ onAdd }: AddProductFormProps) => {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       onSubmit={handleSubmit}
-      className="glass-strong rounded-xl p-5 overflow-hidden"
+      className="glass rounded-2xl p-6 shadow-sm mb-8"
     >
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
-        <Plus className="h-5 w-5 text-primary" />
-        Cadastro Rápido
+      <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-foreground">
+        <Plus className="h-6 w-6 text-primary" />
+        Novo Lançamento
       </h2>
+
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="sm:col-span-2">
@@ -91,11 +92,12 @@ const AddProductForm = ({ onAdd }: AddProductFormProps) => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 sm:w-auto"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 sm:w-auto"
         >
-          <Plus className="h-4 w-4" />
-          Adicionar
+          <Plus className="h-5 w-5" />
+          Salvar Produto
         </motion.button>
+
       </div>
     </motion.form>
   );

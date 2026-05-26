@@ -31,16 +31,17 @@ interface ProductCardProps {
 }
 
 const statusClasses = {
-  green: "neon-green border-2",
-  yellow: "neon-yellow border-2",
-  red: "neon-red border-2",
+  green: "border-l-4 border-l-status-green shadow-sm",
+  yellow: "border-l-4 border-l-status-yellow shadow-sm",
+  red: "border-l-4 border-l-status-red shadow-sm",
 };
 
 const statusBadgeClasses = {
-  green: "bg-neon-green/20 text-neon-green",
-  yellow: "bg-neon-yellow/20 text-neon-yellow",
-  red: "bg-neon-red/20 text-neon-red",
+  green: "bg-status-green-bg text-status-green",
+  yellow: "bg-status-yellow-bg text-status-yellow",
+  red: "bg-status-red-bg text-status-red",
 };
+
 
 const ProductCard = ({ product, onDelete, onEdit, index, readOnly }: ProductCardProps) => {
   const [editing, setEditing] = useState(false);
