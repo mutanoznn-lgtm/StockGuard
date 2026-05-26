@@ -78,8 +78,9 @@ const ProductCard = ({ product, onDelete, onEdit, index, readOnly }: ProductCard
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, x: -50 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className={`float-card glass rounded-xl p-4 overflow-hidden ${statusClasses[status]} transition-shadow`}
+      className={`float-card rounded-2xl p-5 overflow-hidden border border-border/50 ${statusClasses[status]} transition-all`}
     >
+
       {editing ? (
         <div className="space-y-2">
           <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className={inputClass} placeholder="Nome do produto" />
@@ -108,9 +109,10 @@ const ProductCard = ({ product, onDelete, onEdit, index, readOnly }: ProductCard
               </span>
             </div>
             <div className="mt-3">
-              <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClasses[status]}`}>
+              <span className={`inline-flex items-center rounded-lg px-3 py-1 text-[11px] font-black uppercase tracking-wider ${statusBadgeClasses[status]}`}>
                 {label}
               </span>
+
             </div>
           </div>
 

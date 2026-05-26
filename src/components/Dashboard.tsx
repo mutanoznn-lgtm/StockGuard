@@ -293,9 +293,10 @@ const Dashboard = () => {
 
             {products.length === 0 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-12 text-center">
-                <Package className="mx-auto mb-4 h-16 w-16 text-muted-foreground/30" />
-                <p className="text-lg font-medium text-muted-foreground">Nenhum produto cadastrado</p>
-                <p className="text-sm text-muted-foreground/60">Use o formulário acima para adicionar seu primeiro produto</p>
+                <Package className="mx-auto mb-6 h-20 w-20 text-muted-foreground/20" />
+                <p className="text-xl font-bold text-muted-foreground">Estoque vazio</p>
+                <p className="text-sm text-muted-foreground/60 mt-2">Os produtos que você cadastrar aparecerão aqui.</p>
+
               </motion.div>
             )}
 
