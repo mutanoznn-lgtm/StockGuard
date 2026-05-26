@@ -34,41 +34,66 @@ const toCard = (p: DbProduct): CardProduct => ({
 const Dashboard = () => {
   const { user, username, isAdmin, signOut } = useAuth();
   const { toast } = useToast();
-  const [products, setProducts] = useState<CardProduct[]>([]);
-  const [allProducts, setAllProducts] = useState<(CardProduct & { username: string })[]>([]);
+  const [products, setProducts] = useState<(CardProduct & { user_id: string; username?: string })[]>([]);
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const notifiedRef = useRef(false);
 
   const fetchProducts = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("products")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("expiration_date", { ascending: true });
-    setProducts((data ?? []).map(toCard));
-  }, [user]);
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          *,
+          profiles:user_id (
+            username
+          )
+        `)
+        .order("expiration_date", { ascending: true });
 
-  const fetchAllProducts = useCallback(async () => {
-    if (!user) return;
-    const { data: profiles } = await supabase.from("profiles").select("user_id, username");
-    const { data: prods } = await supabase.from("products").select("*").order("expiration_date", { ascending: true });
-    if (!profiles || !prods) return;
+      if (error) throw error;
 
-    const profileMap: Record<string, string> = {};
-    for (const p of profiles) profileMap[p.user_id] = p.username;
+      const formatted = (data ?? []).map((p: any) => ({
+        ...toCard(p),
+        user_id: p.user_id,
+        username: p.profiles?.username || "Desconhecido"
+      }));
 
-    setAllProducts(
-      prods.map((p: any) => ({ ...toCard(p), username: profileMap[p.user_id] ?? "Desconhecido" }))
-    );
-  }, [user]);
+      setProducts(formatted);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar produtos",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, toast]);
 
   useEffect(() => {
     fetchProducts();
-    fetchAllProducts();
-  }, [fetchProducts, fetchAllProducts]);
+
+    // Inscrição em tempo real
+    const channel = supabase
+      .channel("products_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "products" },
+        () => {
+          fetchProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchProducts]);
 
   // Notificações de produtos próximos do vencimento
   useEffect(() => {
@@ -91,53 +116,80 @@ const Dashboard = () => {
   const handleAdd = useCallback(
     async (name: string, manufactureDate: string, expirationDate: string) => {
       if (!user) return;
-      await supabase.from("products").insert({
-        user_id: user.id,
-        name,
-        manufacture_date: manufactureDate,
-        expiration_date: expirationDate,
-      });
-      fetchProducts();
-      fetchAllProducts();
+      try {
+        const { error } = await supabase.from("products").insert({
+          user_id: user.id,
+          name,
+          manufacture_date: manufactureDate,
+          expiration_date: expirationDate,
+        });
+        if (error) throw error;
+        toast({ title: "Produto adicionado com sucesso!" });
+      } catch (error: any) {
+        toast({
+          title: "Erro ao adicionar produto",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
-    [user, fetchProducts, fetchAllProducts]
+    [user, toast]
   );
 
   const handleDelete = useCallback(
     async (id: string) => {
-      await supabase.from("products").delete().eq("id", id);
-      fetchProducts();
-      fetchAllProducts();
+      try {
+        const { error } = await supabase.from("products").delete().eq("id", id);
+        if (error) throw error;
+        toast({ title: "Produto removido!" });
+      } catch (error: any) {
+        toast({
+          title: "Erro ao remover produto",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
-    [fetchProducts, fetchAllProducts]
+    [toast]
   );
 
   const handleEdit = useCallback(
     async (id: string, name: string, manufactureDate: string, expirationDate: string) => {
-      await supabase.from("products").update({
-        name,
-        manufacture_date: manufactureDate,
-        expiration_date: expirationDate,
-      }).eq("id", id);
-      fetchProducts();
-      fetchAllProducts();
+      try {
+        const { error } = await supabase.from("products").update({
+          name,
+          manufacture_date: manufactureDate,
+          expiration_date: expirationDate,
+        }).eq("id", id);
+        if (error) throw error;
+        toast({ title: "Produto atualizado!" });
+      } catch (error: any) {
+        toast({
+          title: "Erro ao atualizar produto",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
-    [fetchProducts, fetchAllProducts]
+    [toast]
   );
 
-  const sortedFiltered = useMemo(() => {
-    const filtered = products.filter((p) =>
-      p.name.toLowerCase().includes(search.toLowerCase())
-    );
-    return filtered.sort(
-      (a, b) => getDaysUntilExpiration(a.expirationDate) - getDaysUntilExpiration(b.expirationDate)
-    );
-  }, [products, search]);
+  const filteredProducts = useMemo(() => {
+    let list = products;
+    if (!showAllProducts) {
+      list = products.filter(p => p.user_id === user?.id);
+    }
+    
+    return list
+      .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+      .sort((a, b) => getDaysUntilExpiration(a.expirationDate) - getDaysUntilExpiration(b.expirationDate));
+  }, [products, search, showAllProducts, user?.id]);
 
   const handleCopy = useCallback(async () => {
-    const text = generateWhatsAppText(sortedFiltered);
+    const text = generateWhatsAppText(filteredProducts);
     try {
       await navigator.clipboard.writeText(text);
+      toast({ title: "Lista copiada!" });
     } catch {
       const textarea = document.createElement("textarea");
       textarea.value = text;
@@ -145,20 +197,22 @@ const Dashboard = () => {
       textarea.select();
       document.execCommand("copy");
       document.body.removeChild(textarea);
+      toast({ title: "Lista copiada!" });
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [sortedFiltered]);
+  }, [filteredProducts, toast]);
 
   const stats = useMemo(() => {
-    const total = products.length;
-    const expired = products.filter((p) => getDaysUntilExpiration(p.expirationDate) < 0).length;
-    const warning = products.filter((p) => {
+    const myProducts = products.filter(p => p.user_id === user?.id);
+    const total = myProducts.length;
+    const expired = myProducts.filter((p) => getDaysUntilExpiration(p.expirationDate) < 0).length;
+    const warning = myProducts.filter((p) => {
       const d = getDaysUntilExpiration(p.expirationDate);
       return d >= 0 && d <= 7;
     }).length;
     return { total, expired, warning };
-  }, [products]);
+  }, [products, user?.id]);
 
   return (
     <div className="min-h-screen pb-12">
