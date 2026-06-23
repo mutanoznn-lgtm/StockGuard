@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,7 +20,12 @@ const Dashboard = () => {
   
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState(false);
-  const [showAllProducts, setShowAllProducts] = useState(false);
+  const [showAllProducts, setShowAllProducts] = useState(isAdmin);
+
+  // Admins veem todos os produtos por padrão
+  useEffect(() => {
+    if (isAdmin) setShowAllProducts(true);
+  }, [isAdmin]);
 
   // Notifications
   useProductNotifications(products);
