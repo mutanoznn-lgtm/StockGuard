@@ -15,17 +15,19 @@ import { FilterBar } from "./dashboard/FilterBar";
 import { EmptyState } from "./dashboard/EmptyState";
 
 const Dashboard = () => {
-  const { user, username, isAdmin, signOut } = useAuth();
+  const { user, username, isAdmin, isManager, signOut } = useAuth();
   const { products, isLoading, handleAdd, handleDelete, handleEdit } = useProducts(user);
+  const isStaff = isAdmin || isManager;
   
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState(false);
-  const [showAllProducts, setShowAllProducts] = useState(isAdmin);
+  const [showAllProducts, setShowAllProducts] = useState(isStaff);
 
-  // Admins veem todos os produtos por padrão
+  // Admins/gerentes veem todos os produtos por padrão
   useEffect(() => {
-    if (isAdmin) setShowAllProducts(true);
-  }, [isAdmin]);
+    if (isStaff) setShowAllProducts(true);
+  }, [isStaff]);
+
 
   // Notifications
   useProductNotifications(products);

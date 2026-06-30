@@ -45,18 +45,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          store: string
           user_id: string
           username: string
         }
         Insert: {
           created_at?: string
           id?: string
+          store: string
           user_id: string
           username: string
         }
         Update: {
           created_at?: string
           id?: string
+          store?: string
           user_id?: string
           username?: string
         }
@@ -85,6 +88,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_store: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -94,7 +98,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "manager"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -222,7 +226,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "manager"],
     },
   },
 } as const
