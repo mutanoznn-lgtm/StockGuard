@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { LogIn, User, Lock, Package, Mail, UserPlus, Store, ShieldCheck, KeyRound } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
+import logoSantaRita from "@/assets/logo-santa-rita.png";
 
 const LoginScreen = () => {
   const { signIn, signUp } = useAuth();
