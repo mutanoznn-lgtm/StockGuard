@@ -11,7 +11,7 @@ const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [storeCode, setStoreCode] = useState<"006" | "003">("006");
+  const [storeCode, setStoreCode] = useState<"006" | "005">("006");
   const [isManager, setIsManager] = useState(false);
   const [managerPass, setManagerPass] = useState("");
   const [error, setError] = useState("");
@@ -120,7 +120,7 @@ const LoginScreen = () => {
                   Loja
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {(["006", "003"] as const).map((code) => (
+                  {(["006", "005"] as const).map((code) => (
                     <button
                       key={code}
                       type="button"
