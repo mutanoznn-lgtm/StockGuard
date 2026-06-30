@@ -78,7 +78,7 @@ const ProductCard = ({ product, onDelete, onEdit, index, readOnly }: ProductCard
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, x: -50 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className={`relative group float-card rounded-2xl p-5 overflow-hidden border border-border/50 ${statusClasses[status]} transition-all hover:shadow-md hover:border-primary/20`}
+      className={`relative group float-card rounded-2xl p-4 sm:p-5 overflow-hidden border border-border/50 ${statusClasses[status]} transition-all hover:shadow-md hover:border-primary/20 min-w-0 max-w-full`}
     >
 
       {editing ? (
