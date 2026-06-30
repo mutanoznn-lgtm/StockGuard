@@ -113,6 +113,67 @@ const LoginScreen = () => {
               </motion.div>
             )}
 
+            {isSignUp && (
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+                <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+                  Loja
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["006", "003"] as const).map((code) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setStoreCode(code)}
+                      className={`flex items-center justify-center gap-2 rounded-2xl border py-3 font-bold transition-all ${
+                        storeCode === code
+                          ? "border-primary bg-primary/10 text-primary shadow-inner"
+                          : "border-border bg-muted/30 text-muted-foreground hover:border-primary/40"
+                      }`}
+                    >
+                      <Store className="h-4 w-4" />
+                      Santa Rita {code}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {isSignUp && (
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => { setIsManager((v) => !v); setError(""); }}
+                  className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-medium transition-all ${
+                    isManager
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-muted/30 text-muted-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4" />
+                    Criar conta de gerente
+                  </span>
+                  <span className={`h-5 w-9 rounded-full p-0.5 transition-all ${isManager ? "bg-primary" : "bg-border"}`}>
+                    <span className={`block h-4 w-4 rounded-full bg-background transition-all ${isManager ? "translate-x-4" : ""}`} />
+                  </span>
+                </button>
+
+                {isManager && (
+                  <div className="relative">
+                    <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="password"
+                      value={managerPass}
+                      onChange={(e) => { setManagerPass(e.target.value); setError(""); }}
+                      placeholder="Senha de gerente"
+                      className="w-full rounded-2xl border border-border bg-muted/30 py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all"
+                    />
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+
             <div>
               <label className="mb-1.5 block text-sm font-medium text-muted-foreground">E-mail</label>
               <div className="relative">
