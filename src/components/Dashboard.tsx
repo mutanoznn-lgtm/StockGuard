@@ -17,16 +17,18 @@ import { EmptyState } from "./dashboard/EmptyState";
 const Dashboard = () => {
   const { user, username, isAdmin, isManager, signOut } = useAuth();
   const { products, isLoading, handleAdd, handleDelete, handleEdit } = useProducts(user);
-  const isStaff = isAdmin || isManager;
   
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState(false);
-  const [showAllProducts, setShowAllProducts] = useState(isStaff);
+  const [showAllProducts, setShowAllProducts] = useState(isAdmin);
 
-  // Admins/gerentes veem todos os produtos por padrão
+  // Apenas admin vê todas as lojas por padrão
   useEffect(() => {
-    if (isStaff) setShowAllProducts(true);
-  }, [isStaff]);
+    if (isAdmin) setShowAllProducts(true);
+  }, [isAdmin]);
+  // suppress unused warning
+  void isManager;
+
 
 
   // Notifications
